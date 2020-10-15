@@ -615,7 +615,7 @@ public abstract class DbSqlSession extends AbstractPersistenceSession {
       }
 
       try {
-        tables = databaseMetaData.getTables(this.connectionMetadataDefaultCatalog, schema, tableName, JDBC_METADATA_TABLE_TYPES);
+        tables = databaseMetaData.getTables(this.connectionMetadataDefaultCatalog, schema, tableName, getTableTypes());
         return tables.next();
       } finally {
         if (tables != null) {
@@ -652,7 +652,7 @@ public abstract class DbSqlSession extends AbstractPersistenceSession {
           }
 
           DatabaseMetaData databaseMetaData = connection.getMetaData();
-          tablesRs = databaseMetaData.getTables(null, schema, tableNameFilter, DbSqlSession.JDBC_METADATA_TABLE_TYPES);
+          tablesRs = databaseMetaData.getTables(null, schema, tableNameFilter, getTableTypes());
           while (tablesRs.next()) {
             String tableName = tablesRs.getString("TABLE_NAME");
             if (!databaseTablePrefix.isEmpty()) {
@@ -861,6 +861,24 @@ public abstract class DbSqlSession extends AbstractPersistenceSession {
     return false;
   }
 
+  protected String[] getTableTypes() {
+    // the PostgreSQL JDBC API changed in 42.2.11 and partitioned tables
+    // are not detected unless the corresponding table type flag is added.
+    if (DatabaseUtil.checkDatabaseType(DbSqlSessionFactory.POSTGRES)) {
+      try {
+        DatabaseMetaData metaData = sqlSession.getConnection().getMetaData();
+        String version = metaData.getDriverVersion().replace("PostgreSQL ", "");
+        new ComparableVersion(version)
+        if (major >= 42 && minor >= 2 && patch >= 11) {
+          return new String[]{"TABLE", "PARTITIONED TABLE"};
+        }
+      } catch (SQLException ex) {
+        // ignore
+      }
+    }
+
+    return JDBC_METADATA_TABLE_TYPES;
+  }
   // getters and setters //////////////////////////////////////////////////////
 
   public SqlSession getSqlSession() {

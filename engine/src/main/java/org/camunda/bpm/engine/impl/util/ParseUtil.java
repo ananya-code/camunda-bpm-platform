@@ -150,4 +150,23 @@ public class ParseUtil {
     return jdk;
   }
 
+  /**
+   * Parses a semantic version String into the appropriate
+   * major, minor and patch segments. If no patch version
+   * is available, a zero (0) will be added.
+   *
+   * @param semVer - the semantic version String
+   * @return a String array of the semantic version segments
+   */
+  public static int[] parseSemVerString(String semVer) {
+
+    String[] versionSegments = version.split("\\.");
+    int[] semVerArray = new int[3];
+    for (int i = 0; i < versionSegments.length; i++) {
+      semVerArray[i] = Integer.valueOf(versionSegments[i]);
+    }
+    if (versionSegments.length == 2) {
+
+    }
+  }
 }
