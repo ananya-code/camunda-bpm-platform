@@ -18,16 +18,11 @@ package org.camunda.bpm.dmn.feel.impl.scala;
 
 import org.camunda.bpm.engine.variable.context.VariableContext;
 import org.camunda.bpm.engine.variable.value.TypedValue;
-import org.camunda.feel.context.VariableProvider;
-import scala.Option;
-import scala.Some;
-import scala.collection.Iterable;
+import org.camunda.feel.context.JavaVariableProvider;
 
-import java.util.Set;
+import java.util.Optional;
 
-import static scala.jdk.CollectionConverters.SetHasAsScala;
-
-public class ContextVariableWrapper implements VariableProvider {
+public class ContextVariableWrapper extends JavaVariableProvider {
 
   protected VariableContext context;
 
@@ -35,21 +30,22 @@ public class ContextVariableWrapper implements VariableProvider {
     this.context = context;
   }
 
-  public Option getVariable(String name) {
+  @Override
+  public Optional<Object> getVariableAsOptional(String name) {
     if (context.containsVariable(name)) {
       TypedValue typedValue = context.resolve(name);
       Object value = typedValue.getValue();
-      return new Some(value);
+      return Optional.ofNullable(value);
 
     } else {
-      return scala.None$.MODULE$;
+      return Optional.empty();
 
     }
   }
 
-  public Iterable<String> keys() {
-    Set<String> strings = context.keySet();
-    return SetHasAsScala(strings).asScala();
+  @Override
+  public Iterable<String> keysAsIterator() {
+    return context.keySet();
   }
 
 }
